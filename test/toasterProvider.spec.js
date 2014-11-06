@@ -43,4 +43,9 @@ describe("provider", function() {
     provider.options("delay", false);
     expect(provider.options("delay")).toBe(false);
   }));
+
+  it("should have updated category value with 'SampleCategory'", inject(function() {
+    provider.options("category", 'SampleCategory');
+    expect(provider.options("category")).toBe('SampleCategory');
+  }));
 });

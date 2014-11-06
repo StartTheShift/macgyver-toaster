@@ -17,14 +17,19 @@
 
 angular.module("Mac.Toaster", []).
   provider("notification", function() {
-    var config, self;
+    var config, self, notification_index;
+
+    notification_hash = {};
 
     self = this;
     config = {
       template: "<div class=\"mac-toasters\"><div class=\"mac-toaster animates\" ng-repeat=\"notification in notifications\">" +
         "<div ng-class=\"notification.type\" class=\"mac-toaster-content\">" +
+        "<div ng-if=\"notification.count > 1\" class=\"mac-toaster-count\"> {{notification.count}} </div>" +
         "<div class=\"mac-toaster-icon\"><i ng-class=\"notification.type\" class=\"icon\"></i></div>" +
-        "<div class=\"mac-toaster-message\">{{notification.message}}</div></div>" +
+        "<div class=\"mac-toaster-message\">" +
+          "<div ng-repeat=\"message in notification.messages\"> {{message}} <hr ng-if=\"!$last\"> </div>" +
+        "</div>" +
         "<i ng-click=\"close($index)\" class=\"icon x\"></i>" +
         "</div></div>",
       position: "top right",
@@ -109,7 +114,7 @@ angular.module("Mac.Toaster", []).
           */
 
         show = function(type, message, options) {
-          var new_notification;
+          var new_notification, notification_index, message_index, short_key, long_key;
 
           // Default to empty object
           if (options === null) {
@@ -123,24 +128,100 @@ angular.module("Mac.Toaster", []).
             toastersScope.notifications.shift();
           }
 
-          new_notification = {
-            type: type,
-            message: message,
-            options: opts,
-            promise: null
-          };
+          // if a category is provided then we want to aggregate toasts
+          if (options.category) {
+            // a short key represents an aggregation of different messages
+            // belonging to the same category
+            short_key = [type, options.category].join('|');
 
+            // a long key represents an aggregation of the same message
+            // in the same category
+            long_key = [type, options.category, message].join('|');
+          }
+
+          // there is an existing aggregation with the same message in the
+          // same category as the new notification
+          if (long_key && long_key in notification_hash) {
+              notification_index = toastersScope.notifications.indexOf(notification_hash[long_key]);
+              notification_hash[long_key].count += 1;
+              toastersScope.notifications.splice(notification_index, 1);
+              toastersScope.notifications.push(notification_hash[long_key]);
+
+            }
+            // there is an existing aggregation in the same category
+            else if (short_key && short_key in notification_hash) {
+              var messages = notification_hash[short_key].messages;
+
+              // if the message exists in the aggregated category we
+              // will take it out and make it its own notification with
+              // a count of 2
+              if (messages.indexOf(message) > -1) {
+                message_index = messages.indexOf(message);
+
+                messages.splice(message_index, 1);
+
+                // if there is no more messages left in the aggregated
+                // category delete the notification
+                if (messages.length === 0)  {
+                  message_index = toastersScope.notifications.indexOf(notification_hash[short_key]);
+                  toastersScope.notifications.splice(message_index, 1);
+                  delete notification_hash[short_key];
+                }
+
+                new_notification = {
+                  type: type,
+                  messages: [message],
+                  options: opts,
+                  promise: null,
+                  count: 2,
+                  key: long_key
+                };
+
+                toastersScope.notifications.push(new_notification);
+                notification_hash[long_key] = new_notification;
+              }
+              // add the new message before the existing messages
+              else {
+                messages.unshift(message);
+              }
+            }
+            // create a new notification if there is no aggregation possible
+            // including notifications with no category defined
+            else {
+              new_notification = {
+                type: type,
+                messages: [message],
+                options: opts,
+                promise: null,
+                count: 1,
+              };
+
+              toastersScope.notifications.push(new_notification);
+
+              // only add to hash if aggregation is allowed (category is provided)
+              if (options.category){
+                new_notification.key = short_key;
+                notification_hash[short_key] = new_notification;
+              }
+            }
+          // set the auto-close delay if provided
           if (opts.delay > 0) {
             new_notification.promise = $timeout(function() {
               var index;
               index = toastersScope.notifications.indexOf(new_notification);
-              if (index > -1) {
+
+              // decrement notification count if possible
+              if (new_notification.count > 1) {
+                new_notification.count -= 1;
+              }
+              // if the count is 0 then close the notification
+              else if (index > -1) {
                 toastersScope.notifications.splice(index, 1);
               }
+
             }, opts.delay);
           }
 
-          toastersScope.notifications.push(new_notification);
         };
 
         error = function(message, options) {
@@ -157,10 +238,13 @@ angular.module("Mac.Toaster", []).
 
         close = function(index) {
           var notification = toastersScope.notifications[index];
+
           if (notification.promise) {
             $timeout.cancel(notification.promise);
           }
+
           toastersScope.notifications.splice(index, 1);
+          delete notification_hash[notification.key];
         };
 
         toastersElement = $compile(config.template)(toastersScope);

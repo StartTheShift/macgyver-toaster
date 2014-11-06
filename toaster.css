@@ -1,64 +1,192 @@
 .mac-toasters {
+  z-index: 99999;
   position: fixed;
-}
-.mac-toaster {
-  background: #fff;
-  height: 48px;
-  border: solid 1px #d9dfea;
-  border-radius: 4px;
-  -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
-  box-shadow: 0px 2px 8px rgba(0, 0, 0, .2);
-  box-sizing: border-box;
-  cursor: pointer;
-  position: relative;
-}
-.mac-toaster.ng-enter, .mac-toaster.ng-leave {
-  -webkit-transition: all 0.2s ease-out;
-  transition: all 0.2s ease-out;
-}
-.mac-toaster.ng-enter, .mac-toaster.ng-leave.ng-leave-active {
-  opacity: 0;
-}
-.mac-toaster.ng-leave, .mac-toaster.ng-enter.ng-enter-active {
-  opacity: 1;
-}
-.mac-toaster>.x {
-  position: absolute;
-  right: 12px;
-  top: 11px;
-  font-size: 21px;
-  font-weight: bold;
-  text-shadow: 0px 1px 0px #fff;
-  opacity: 0.2;
-  font-style: normal;
-}
-.mac-toaster>.x:after {
-  content: "x";
+  top: 10px;
+  right: 10px;
 }
 .mac-toaster-content {
   position: relative;
-  padding: 0 48px 0 56px;
+  background: #fff;
+  margin-bottom: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 0 0 1px #d9dfea;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 0 0 1px #d9dfea;
+  padding: 12px 48px 12px 56px;
+  min-height: 56px;
+}
+.mac-toaster-content:before {
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  width: 1px;
+  height: 32px;
+}
+.mac-toaster-count {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: -10px;
+  color: white;
+  font-weight: bold;
+  background: #ff6f60;
+  padding: 3px 6px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 .mac-toaster-icon {
   width: 32px;
   height: 32px;
+  background: #ff6f60;
   position: absolute;
-  top: 7px;
+  top: 12px;
   left: 12px;
   overflow: hidden;
   text-align: center;
   line-height: 30px;
+  -webkit-border-radius: 32px;
+  border-radius: 32px;
+  margin-right: 16px;
 }
 .mac-toaster-icon>.icon {
   color: #fff;
+}
+.mac-toaster-icon>.icon.check {
+  margin-top: 1px;
 }
 .mac-toaster-icon>img {
   width: 100%;
 }
 .mac-toaster-message {
-  white-space: nowrap;
-  line-height: 46px;
+  width: 100%;
+  max-width: 320px;
+  line-height: 1.2;
+  display: inline-block;
+  vertical-align: middle;
 }
-.mac-toaster-message>a {
-  color: #000;
+.mac-toaster {
+  position: relative;
+}
+.mac-toaster.ng-enter {
+  opacity: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  right: -110%;
+  -webkit-transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  -o-transition: all 0.3s ease-out;
+  -ms-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+}
+.mac-toaster.ng-enter-active {
+  opacity: 1;
+  -ms-filter: none;
+  filter: none;
+  right: 0;
+}
+.mac-toaster.ng-leave {
+  opacity: 1;
+  -ms-filter: none;
+  filter: none;
+  right: 0;
+  height: 56px;
+  -webkit-transition: right 0.3s ease-out, opacity 0.3s ease-out, height 0.2s linear 0.3s, visibility 0.5s ease-out;
+  -moz-transition: right 0.3s ease-out, opacity 0.3s ease-out, height 0.2s linear 0.3s, visibility 0.5s ease-out;
+  -o-transition: right 0.3s ease-out, opacity 0.3s ease-out, height 0.2s linear 0.3s, visibility 0.5s ease-out;
+  -ms-transition: right 0.3s ease-out, opacity 0.3s ease-out, height 0.2s linear 0.3s, visibility 0.5s ease-out;
+  transition: right 0.3s ease-out, opacity 0.3s ease-out, height 0.2s linear 0.3s, visibility 0.5s ease-out;
+}
+.mac-toaster.ng-leave-active {
+  opacity: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  right: -100%;
+  height: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+.mac-toaster .success .mac-toaster-icon {
+  background: #47d295;
+}
+.mac-toaster .success .mac-toaster-icon:after {
+  content: '';
+  display: block;
+  height: 2px;
+  width: 7px;
+  background: #fff;
+  position: absolute;
+  top: 17px;
+  left: 8px;
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+.mac-toaster .success .mac-toaster-icon:before {
+  content: '';
+  display: block;
+  height: 2px;
+  width: 15px;
+  background: #fff;
+  position: absolute;
+  top: 15px;
+  left: 11px;
+  -webkit-transform: rotate(135deg);
+  -moz-transform: rotate(135deg);
+  -o-transform: rotate(135deg);
+  -ms-transform: rotate(135deg);
+  transform: rotate(135deg);
+}
+.mac-toaster .error .mac-toaster-icon:after {
+  content: '!';
+  display: block;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  line-height: 32px;
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+}
+.mac-toaster .icon.x {
+  cursor: pointer;
+  background: rgba(0,0,0,0);
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;
+  height: 56px;
+}
+.mac-toaster .icon.x:before {
+  content: '';
+  width: 14px;
+  background: #c0c9d8;
+  height: 3px;
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -2px;
+  margin-left: -7px;
+}
+.mac-toaster .icon.x:after {
+  content: '';
+  width: 14px;
+  background: #c0c9d8;
+  height: 3px;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -2px;
+  margin-left: -7px;
 }
