@@ -61,7 +61,7 @@ angular.module("Mac.Toaster", []).
       "$rootScope",
       "$timeout",
       function ($animate, $compile, $rootScope, $timeout) {
-        var notifications, toasterScope, toastersElement, styles = {},
+        var notifications, toastersScope, toastersElement, styles = {},
           deferred_notifications = [], defer_call_id = null, positions, i;
 
         positions = config.position.split(" ");
