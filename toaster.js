@@ -21,12 +21,20 @@ angular.module("Mac.Toaster", []).
 
     self = this;
     config = {
-      template: '<div class="mac-toasters"><div class="mac-toaster animates" ng-repeat="notification in notifications">' +
-        '<div ng-class="notification.type" class="mac-toaster-content">' +
-        '<div class="mac-toaster-icon"><i ng-class="notification.type" class="icon"></i></div>' +
-        '<div class="mac-toaster-message">{{notification.message}}</div></div>' +
-        '<i ng-click="close($index)" class="icon x"></i>' +
-        '</div></div>',
+      template:
+        '<div class="mac-toasters">' +
+          '<div class="mac-toaster animates" ng-repeat="notification in notifications">' +
+            '<div ng-class="notification.type" class="mac-toaster-content">' +
+              '<div class="mac-toaster-icon">' +
+                '<i ng-class="notification.type" class="icon"></i>' +
+              '</div>' +
+              '<div class="mac-toaster-message">' +
+                '{{notification.message}}' +
+              '</div>' +
+            '</div>' +
+            '<i ng-click="close($index)" class="icon x"></i>' +
+          '</div>' +
+        '</div>',
       position: "top right",
       max: 5,
       delay: 4000,
@@ -87,9 +95,9 @@ angular.module("Mac.Toaster", []).
 
         /**
          * @function
-         * @name flush
+         * @name flushQueue
          * @description
-         * Renders all the methods into the queue.
+         * Renders all the deferred notifications in the queue.
          */
 
         function flushQueue(){
@@ -101,9 +109,9 @@ angular.module("Mac.Toaster", []).
 
         /**
          * @function
-         * @name clear
+         * @name clearQueue
          * @description
-         * Clears all the notifications in the queue.
+         * Clears all the deferred notifications in the queue.
          */
 
         function clearQueue(){
