@@ -62,7 +62,7 @@ angular.module("Mac.Toaster", []).
       "$timeout",
       function ($animate, $compile, $rootScope, $timeout) {
         var notifications, toasterScope, toastersElement, styles = {},
-          deferred_notification = [], defer_call_id = null, positions, i;
+          deferred_notifications = [], defer_call_id = null, positions, i;
 
         positions = config.position.split(" ");
 
@@ -102,7 +102,7 @@ angular.module("Mac.Toaster", []).
 
         function flushQueue(){
           while(deferred_notifications.length){
-            show(self, deferred_notifications.shift());
+            show.apply(self, deferred_notifications.shift()[0]);
           }
           defer_call_id = null;
         }
