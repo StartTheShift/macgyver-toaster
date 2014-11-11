@@ -21,12 +21,12 @@ angular.module("Mac.Toaster", []).
 
     self = this;
     config = {
-      template: "<div class=\"mac-toasters\"><div class=\"mac-toaster animates\" ng-repeat=\"notification in notifications\">" +
-        "<div ng-class=\"notification.type\" class=\"mac-toaster-content\">" +
-        "<div class=\"mac-toaster-icon\"><i ng-class=\"notification.type\" class=\"icon\"></i></div>" +
-        "<div class=\"mac-toaster-message\">{{notification.message}}</div></div>" +
-        "<i ng-click=\"close($index)\" class=\"icon x\"></i>" +
-        "</div></div>",
+      template: '<div class="mac-toasters"><div class="mac-toaster animates" ng-repeat="notification in notifications">' +
+        '<div ng-class="notification.type" class="mac-toaster-content">' +
+        '<div class="mac-toaster-icon"><i ng-class="notification.type" class="icon"></i></div>' +
+        '<div class="mac-toaster-message">{{notification.message}}</div></div>' +
+        '<i ng-click="close($index)" class="icon x"></i>' +
+        '</div></div>',
       position: "top right",
       max: 5,
       delay: 4000,
@@ -53,8 +53,8 @@ angular.module("Mac.Toaster", []).
       "$rootScope",
       "$timeout",
       function ($animate, $compile, $rootScope, $timeout) {
-        var notifications, show, error, success, notice, close, toasterScope, toastersElement,
-            styles = {}, positions, i;
+        var notifications, toasterScope, toastersElement, styles = {},
+          deferred_notification = [], defer_call_id = null, positions, i;
 
         positions = config.position.split(" ");
 
@@ -68,7 +68,51 @@ angular.module("Mac.Toaster", []).
         });
 
         /**
-         * @chalk
+         * @function
+         * @name defer
+         * @description
+         * Proxy method to show, deferring the show calls after current JS
+         * thread ends.
+         * @param {String} type    Message type
+         * @param {String} message Message content
+         * @param {Object} options Showing toaster options
+         */
+
+        function defer(){
+          deferred_notifications.push(arguments);
+          if(defer_call_id === null){
+            defer_call_id = $timeout(flushQueue, 0);
+          }
+        }
+
+        /**
+         * @function
+         * @name flush
+         * @description
+         * Renders all the methods into the queue.
+         */
+
+        function flushQueue(){
+          while(deferred_notifications.length){
+            show(self, deferred_notifications.shift());
+          }
+          defer_call_id = null;
+        }
+
+        /**
+         * @function
+         * @name clear
+         * @description
+         * Clears all the notifications in the queue.
+         */
+
+        function clearQueue(){
+          deferred_notifications.length = 0;
+          $timeout.cancel(defer_call_id);
+          defer_call_id = null;
+        }
+
+        /**
          * @function
          * @name show
          * @description
@@ -78,37 +122,7 @@ angular.module("Mac.Toaster", []).
          * @param {Object} options Showing toaster options
          */
 
-        /**
-         * @chalk
-         * @function
-         * @name error
-         * @description
-         * Shortcut function for showing error type
-         * @param {String} message Alert message
-         * @param {Object} options Additional options
-         */
-
-         /**
-          * @chalk
-          * @function
-          * @name success
-          * @description
-          * Shortcut function for showing success type
-          * @param {String} message Alert message
-          * @param {Object} options Additional options
-          */
-
-         /**
-          * @chalk
-          * @function
-          * @name notice
-          * @description
-          * Shortcut function fow showing notice type
-          * @param {String} message Alert message
-          * @param {Object} options Additional options
-          */
-
-        show = function(type, message, options) {
+        function show(type, message, options) {
           var new_notification;
 
           // Default to empty object
@@ -117,6 +131,11 @@ angular.module("Mac.Toaster", []).
           }
 
           opts = angular.extend({}, config, options);
+
+          if (options.deferred === true){
+            options.deferred = false;
+            return defer(arguments);
+          }
 
           // If there are more notifications than max, pop the first one
           if (opts.max && toastersScope.notifications.length >= opts.max) {
@@ -143,19 +162,54 @@ angular.module("Mac.Toaster", []).
           toastersScope.notifications.push(new_notification);
         };
 
-        error = function(message, options) {
+       /**
+        * @function
+        * @name error
+        * @description
+        * Shortcut function for showing error type
+        * @param {String} message Alert message
+        * @param {Object} options Additional options
+        */
+
+        function error(message, options) {
           this.show.call(this, "error", message, angular.extend({}, config.error, options));
         };
 
-        success = function(message, options) {
+        /**
+         * @function
+         * @name success
+         * @description
+         * Shortcut function for showing success type
+         * @param {String} message Alert message
+         * @param {Object} options Additional options
+         */
+
+        function success(message, options) {
           this.show.call(this, "success", message, angular.extend({}, config.success, options));
         };
 
-        notice = function(message, options) {
+        /**
+         * @function
+         * @name notice
+         * @description
+         * Shortcut function fow showing notice type
+         * @param {String} message Alert message
+         * @param {Object} options Additional options
+         */
+
+        function notice(message, options) {
           this.show.call(this, "notice", message, angular.extend({}, config.notice, options));
         };
 
-        close = function(index) {
+        /**
+         * @function
+         * @name close
+         * @description
+         * Remove the notification.
+         * @param {index} index of the notification in the notifications stack
+         */
+
+        function close(index) {
           var notification = toastersScope.notifications[index];
           if (notification.promise) {
             $timeout.cancel(notification.promise);
@@ -168,11 +222,14 @@ angular.module("Mac.Toaster", []).
         $animate.enter(toastersElement, angular.element(document.body));
 
         return {
-          show: show,
-          error: error,
-          success: success,
-          notice: notice,
-          close: close
+          'show': show,
+          'defer': defer,
+          'flushQueue': flushQueue,
+          'clearQueue': clearQueue,
+          'error': error,
+          'success': success,
+          'notice': notice,
+          'close': close
         };
       }
     ];
