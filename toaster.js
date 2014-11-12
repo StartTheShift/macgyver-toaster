@@ -66,7 +66,7 @@ angular.module("Mac.Toaster", []).
 
         positions = config.position.split(" ");
 
-        // Create an isolate scope for all the toaster notifications
+        // Create an isolated scope for all the toaster notifications
         toastersScope = $rootScope.$new(true);
         angular.extend(toastersScope, {
           notifications: [],
@@ -102,7 +102,7 @@ angular.module("Mac.Toaster", []).
 
         function flushQueue(){
           while(deferred_notifications.length){
-            show.apply(self, deferred_notifications.shift()[0]);
+            show.apply(self, deferred_notifications.shift());
           }
           defer_call_id = null;
         }
@@ -142,7 +142,7 @@ angular.module("Mac.Toaster", []).
 
           if (options.deferred === true){
             options.deferred = false;
-            return defer(arguments);
+            return defer.apply(self, arguments);
           }
 
           // If there are more notifications than max, pop the first one
