@@ -23,13 +23,29 @@ angular.module("Mac.Toaster", []).
     config = {
       template:
         '<div class="mac-toasters">' +
-          '<div class="mac-toaster animates" ng-repeat="notification in notifications">' +
+          '<div class="mac-toaster animates" ' +
+               'ng-repeat="notification in notifications">' +
             '<div ng-class="notification.type" class="mac-toaster-content">' +
               '<div class="mac-toaster-icon">' +
                 '<i ng-class="notification.type" class="icon"></i>' +
               '</div>' +
-              '<div class="mac-toaster-message">' +
-                '{{notification.message}}' +
+              '<div class="mac-toaster-message" ' +
+                   'ng-switch="notification.messages.length">' +
+                '<div ng-switch-when="1">' +
+                  '{{ notification.messages[0] }}' +
+                '</div>' +
+                '<div ng-switch-default>' +
+                  '<span class="notification-count">' +
+                    '{{notification.messages.length}} {{notification.type}}s ' +
+                  '</span>' +
+                  '<span class="notification-collapse">collapse</span>' +
+                '</div>' +
+              '</div>' +
+              '<div ng-if="notification.messages.length > 1" ' +
+                   'class="notication-aggregate">' +
+                '<div ng-repeat="message in notification.messages track by $index">' +
+                  '{{message}}' +
+                '</div>' +
               '</div>' +
             '</div>' +
             '<i ng-click="close($index)" class="icon x"></i>' +
@@ -38,6 +54,7 @@ angular.module("Mac.Toaster", []).
       position: "top right",
       max: 5,
       delay: 4000,
+      agg_margin: 50,
       success: {},
       error: {},
       notice: {}
@@ -132,6 +149,8 @@ angular.module("Mac.Toaster", []).
 
         function show(type, message, options) {
           var new_notification;
+          var notifications = toastersScope.notifications;
+          var timestamp = options.timestamp || new Date().getTime();
 
           // Default to empty object
           if (options === null) {
@@ -145,30 +164,60 @@ angular.module("Mac.Toaster", []).
             return defer.apply(self, arguments);
           }
 
-          // If there are more notifications than max, pop the first one
-          if (opts.max && toastersScope.notifications.length >= opts.max) {
-            toastersScope.notifications.shift();
+          for (var i = 0; i < notifications.length; i++){
+            var notification = notifications[i];
+            if(notification.type === type &&
+               notification.timestamp - config.agg_margin < timestamp &&
+               notification.timestamp + config.agg_margin > timestamp){
+              notification.messages.push(message);
+              // extend the pop promise delay if any
+              if(notification.promise){
+                $timeout.cancel(notification.promise);
+                notification.promise = $timeout(deferred_pop(notification),
+                  opts.delay);
+              }
+              return;
+            }
           }
 
           new_notification = {
             type: type,
-            message: message,
+            messages: [message],
             options: opts,
+            timestamp: timestamp,
             promise: null
           };
 
-          if (opts.delay > 0) {
-            new_notification.promise = $timeout(function() {
-              var index;
-              index = toastersScope.notifications.indexOf(new_notification);
-              if (index > -1) {
-                toastersScope.notifications.splice(index, 1);
-              }
-            }, opts.delay);
+          // If there are more notifications than max, pop the first one
+          if (opts.max && notifications.length >= opts.max) {
+            notifications.shift();
           }
 
-          toastersScope.notifications.push(new_notification);
+          if (opts.delay > 0) {
+            new_notification.promise = $timeout(deferred_pop(new_notification),
+              opts.delay);
+          }
+
+          notifications.push(new_notification);
         };
+
+       /**
+        * @function
+        * @name deferred_pop
+        * @description
+        * Callback constructor to pop a notification from the stack
+        * @param {Object} notification to remove
+        */
+
+        function deferred_pop(notification){
+          return function(){
+            var index;
+            index = toastersScope.notifications.indexOf(notification);
+            if (index > -1) {
+              toastersScope.notifications.splice(index, 1);
+            }
+          }
+        }
 
        /**
         * @function
