@@ -36,19 +36,21 @@ angular.module("Mac.Toaster", []).
                 '</div>' +
                 '<div ng-switch-default>' +
                   '<span class="notification-count">' +
-                    '{{notification.messages.length}} {{notification.type}}s ' +
+                    '{{ notification.messages.length }} {{ notification.type }}s ' +
                   '</span>' +
-                  '<span class="notification-collapse">collapse</span>' +
+                  '<span ng-click="toggle($index)" class="notification-collapse">{{ notification.collapsed ? "Expand" : "Collapse" }}</span>' +
                 '</div>' +
               '</div>' +
-              '<div ng-if="notification.messages.length > 1" ' +
-                   'class="notication-aggregate">' +
-                '<div ng-repeat="message in notification.messages track by $index">' +
-                  '{{message}}' +
-                '</div>' +
-              '</div>' +
+              '<i ng-click="close($index)" class="icon x"></i>' +
             '</div>' +
-            '<i ng-click="close($index)" class="icon x"></i>' +
+            '<ul ng-if="notification.messages.length > 1" ' +
+                 'ng-class="{\'collapsed\': notification.collapsed}" ' +
+                 'class="mac-toaster-aggregate">' +
+              '<li class="animates" ' +
+                'ng-repeat="message in notification.messages track by $index">' +
+                '{{ message }}' +
+              '</li>' +
+            '</ul>' +
           '</div>' +
         '</div>',
       position: "top right",
@@ -87,6 +89,9 @@ angular.module("Mac.Toaster", []).
         toastersScope = $rootScope.$new(true);
         angular.extend(toastersScope, {
           notifications: [],
+          toggle: function(index) {
+            toggle(index);
+          },
           close: function(index) {
             close(index);
           }
@@ -167,9 +172,10 @@ angular.module("Mac.Toaster", []).
           for (var i = 0; i < notifications.length; i++){
             var notification = notifications[i];
             if(notification.type === type &&
-               notification.timestamp - config.agg_margin < timestamp &&
-               notification.timestamp + config.agg_margin > timestamp){
+              notification.timestamp - config.agg_margin < timestamp &&
+              notification.timestamp + config.agg_margin > timestamp){
               notification.messages.push(message);
+              notification.collapsed = false;
               // extend the pop promise delay if any
               if(notification.promise){
                 $timeout.cancel(notification.promise);
@@ -257,6 +263,19 @@ angular.module("Mac.Toaster", []).
         function notice(message, options) {
           this.show.call(this, "notice", message, angular.extend({}, config.notice, options));
         };
+
+        /**
+         * @function
+         * @name toggle
+         * @description
+         * Toggle notification collapsed status.
+         * @param {index} index of the notification in the notifications stack
+         */
+
+        function toggle(index) {
+          var notification = toastersScope.notifications[index];
+          return notification.collapsed = !notification.collapsed
+        }
 
         /**
          * @function
